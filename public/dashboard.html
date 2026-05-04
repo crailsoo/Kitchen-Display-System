@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KDS Dashboard</title>
+<style>
+:root {
+  --sidebar-bg: #16213e;
+  --sidebar-w:  220px;
+  --accent:     #00c896;
+  --accent-dim: rgba(0,200,150,.12);
+  --bg:         #f0f2f6;
+  --card:       #ffffff;
+  --text:       #1c2333;
+  --muted:      #6b7280;
+  --border:     #e5e7eb;
+  --red:        #ef4444;
+  --yellow:     #f59e0b;
+  --orange:     #f97316;
+  --green:      #10b981;
+  --radius:     10px;
+  --shadow:     0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── SIDEBAR ─────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 200;
+}
+
+.sidebar-logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.sidebar-logo .kds { font-size: 1.3rem; font-weight: 900; color: var(--accent); letter-spacing: 1px; }
+.sidebar-logo .sub { font-size: 0.7rem; color: rgba(255,255,255,.35); margin-top: 1px; }
+
+nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; cursor: pointer;
+  color: rgba(255,255,255,.5); font-size: 0.85rem; font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.15s; user-select: none;
+  text-decoration: none;
+}
+.nav-item:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.05); }
+.nav-item.active { color: #fff; border-left-color: var(--accent); background: var(--accent-dim); }
+.nav-item .icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+
+.nav-sep {
+  margin: 8px 18px; border: none;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+.sidebar-foot {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  display: flex; flex-direction: column; gap: 7px;
+}
+.display-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; border-radius: 7px;
+  background: rgba(255,255,255,.06); color: rgba(255,255,255,.65);
+  text-decoration: none; font-size: 0.78rem; font-weight: 500;
+  transition: background 0.15s;
+}
+.display-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+.display-link .arrow { opacity: .5; }
+
+/* ── MAIN ────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.page-title { font-size: 1.1rem; font-weight: 700; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 7px; font-size: 0.83rem;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.12s;
+}
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-danger { background: #fee2e2; color: var(--red); border: 1px solid #fecaca; }
+.btn-danger:hover { background: #fecaca; }
+.btn-sm { padding: 5px 11px; font-size: 0.78rem; }
+
+.saved-badge {
+  display: none; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 6px;
+  background: #d1fae5; color: #065f46; font-size: 0.8rem; font-weight: 600;
+}
+.saved-badge.show { display: flex; }
+
+.content { padding: 24px 28px; flex: 1; }
+
+/* ── SECTIONS ────────────────────────────── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── STATS GRID ──────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 18px 20px; box-shadow: var(--shadow);
+}
+.stat-card .label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.stat-card .value { font-size: 2rem; font-weight: 800; line-height: 1; }
+.stat-card .sub   { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.stat-card.green .value { color: var(--green); }
+.stat-card.yellow .value { color: var(--yellow); }
+.stat-card.blue .value { color: #3b82f6; }
+.stat-card.purple .value { color: #8b5cf6; }
+
+/* ── CHART ───────────────────────────────── */
+.chart-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 20px; box-shadow: var(--shadow); margin-bottom: 24px;
+}
+.chart-title { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.bar {
+  width: 100%; border-radius: 3px 3px 0 0;
+  background: var(--accent); opacity: 0.7;
+  min-height: 2px; transition: height 0.4s;
+}
+.bar.current { opacity: 1; }
+.bar-lbl { font-size: 0.55rem; color: var(--muted); }
+
+/* ── SETTINGS CARD ───────────────────────── */
+.settings-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 22px 24px; box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.settings-card h3 {
+  font-size: 0.95rem; font-weight: 700; margin-bottom: 4px;
+}
+.settings-card .desc { font-size: 0.8rem; color: var(--muted); margin-bottom: 18px; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+.field input[type=text],
+.field input[type=number] {
+  width: 100%; padding: 9px 12px;
+  border: 1px solid var(--border); border-radius: 7px;
+  font-size: 0.9rem; background: #fafafa;
+  transition: border 0.15s;
+}
+.field input:focus { outline: none; border-color: var(--accent); background: #fff; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* Urgency slider */
+.urgency-group { display: flex; flex-direction: column; gap: 14px; }
+.urgency-row {
+  display: grid; grid-template-columns: 90px 1fr 52px; gap: 12px; align-items: center;
+}
+.urgency-dot {
+  width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-right: 6px;
+  display: inline-block; vertical-align: middle;
+}
+.urgency-label { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; }
+
+input[type=range] {
+  width: 100%; accent-color: var(--accent); cursor: pointer;
+}
+.urgency-val {
+  font-size: 0.85rem; font-weight: 700; color: var(--text);
+  text-align: right; white-space: nowrap;
+}
+
+/* Toggle */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+.toggle-row .toggle-label { font-size: 0.88rem; }
+.toggle-row .toggle-sub { font-size: 0.75rem; color: var(--muted); }
+
+.toggle {
+  position: relative; width: 42px; height: 24px; flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: #d1d5db; border-radius: 12px; cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  left: 3px; top: 3px; background: #fff;
+  transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* Urgency preview bar */
+.urgency-preview {
+  display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 14px;
+  border: 1px solid var(--border);
+}
+.up-seg { transition: flex 0.3s; }
+.up-green  { background: #10b981; }
+.up-yellow { background: #f59e0b; }
+.up-orange { background: #f97316; }
+.up-red    { background: #ef4444; flex: 1; }
+
+/* ── STATIONS ────────────────────────────── */
+.station-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+
+.station-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; background: #fafafa;
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.station-color-pick {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 3px solid var(--border); cursor: pointer;
+  flex-shrink: 0; overflow: hidden; padding: 0;
+  background: none;
+}
+.station-color-pick input[type=color] {
+  width: 150%; height: 150%; border: none; cursor: pointer;
+  transform: translate(-17%, -17%); padding: 0;
+}
+.station-name-input {
+  flex: 1; padding: 7px 10px; border: 1px solid var(--border);
+  border-radius: 6px; font-size: 0.88rem; background: #fff;
+}
+.station-name-input:focus { outline: none; border-color: var(--accent); }
+.station-id {
+  font-size: 0.72rem; color: var(--muted); font-family: monospace;
+  background: var(--bg); padding: 3px 7px; border-radius: 4px;
+  white-space: nowrap;
+}
+
+.add-station-form {
+  display: flex; gap: 10px; margin-top: 8px;
+}
+.add-station-form input {
+  flex: 1; padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: 7px; font-size: 0.88rem;
+}
+.add-station-form input:focus { outline: none; border-color: var(--accent); }
+
+/* ── INTEGRATION ─────────────────────────── */
+.endpoint-list { display: flex; flex-direction: column; gap: 8px; }
+.endpoint {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; background: #fafafa;
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.method {
+  font-size: 0.68rem; font-weight: 800; padding: 3px 7px;
+  border-radius: 4px; color: #fff; flex-shrink: 0; margin-top: 1px;
+}
+.method.post   { background: #16a34a; }
+.method.get    { background: #2563eb; }
+.method.patch  { background: #d97706; }
+.method.delete { background: #dc2626; }
+.method.put    { background: #7c3aed; }
+
+.endpoint-path { font-family: monospace; font-size: 0.85rem; font-weight: 700; }
+.endpoint-desc { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+.code-block {
+  background: #1c2333; color: #e2e8f0;
+  padding: 16px 18px; border-radius: 8px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.78rem; line-height: 1.6;
+  overflow-x: auto; white-space: pre;
+  margin-top: 14px; position: relative;
+}
+.copy-btn {
+  position: absolute; top: 10px; right: 10px;
+  padding: 4px 10px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.08); color: rgba(255,255,255,.7);
+  cursor: pointer; font-size: 0.72rem; transition: all 0.12s;
+}
+.copy-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+.server-url {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: #fafafa; border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 14px;
+}
+.server-url code { font-family: monospace; font-size: 0.9rem; font-weight: 700; color: var(--accent); flex: 1; }
+
+/* ── BRANDING PREVIEW ────────────────────── */
+.preview-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-radius: 8px;
+  background: #0d0d0d; margin-top: 14px;
+}
+.preview-logo { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+
+/* ── MISC ────────────────────────────────── */
+.section-header { margin-bottom: 20px; }
+.section-header h2 { font-size: 1.2rem; font-weight: 800; }
+.section-header p  { font-size: 0.83rem; color: var(--muted); margin-top: 4px; }
+
+.info-box {
+  padding: 12px 14px; border-radius: 8px; font-size: 0.82rem;
+  background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af;
+  margin-bottom: 16px;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="kds">KDS</div>
+    <div class="sub">Kitchen Display System</div>
+  </div>
+
+  <nav>
+    <div class="nav-item active" data-target="overview">
+      <span class="icon">📊</span> Übersicht
+    </div>
+    <div class="nav-item" data-target="stations">
+      <span class="icon">📍</span> Stationen
+    </div>
+    <hr class="nav-sep">
+    <div class="nav-item" data-target="kitchen-cfg">
+      <span class="icon">🍳</span> Küchen-Display
+    </div>
+    <div class="nav-item" data-target="ausgabe-cfg">
+      <span class="icon">🛎</span> Ausgabe-Display
+    </div>
+    <hr class="nav-sep">
+    <div class="nav-item" data-target="branding">
+      <span class="icon">✏️</span> Branding
+    </div>
+    <div class="nav-item" data-target="integration">
+      <span class="icon">🔌</span> Integration
+    </div>
+  </nav>
+
+  <div class="sidebar-foot">
+    <a class="display-link" href="/kitchen.html" target="_blank">
+      🍳 Küchen-Display <span class="arrow">↗</span>
+    </a>
+    <a class="display-link" href="/ausgabe.html" target="_blank">
+      🛎 Ausgabe-Display <span class="arrow">↗</span>
+    </a>
+    <a class="display-link" href="/pos-demo.html" target="_blank">
+      🖥 POS Demo <span class="arrow">↗</span>
+    </a>
+  </div>
+</aside>
+
+<!-- ── MAIN ────────────────────────────────────────────────── -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Übersicht</div>
+    <div class="topbar-right">
+      <div class="saved-badge" id="savedBadge">✓ Gespeichert</div>
+      <button class="btn btn-primary" id="saveBtn" style="display:none" onclick="saveSettings()">Speichern</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── ÜBERSICHT ──────────────────────────────────────── -->
+    <section class="section active" id="sec-overview">
+      <div class="section-header">
+        <h2>Übersicht</h2>
+        <p>Live-Statistiken für heute</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card green">
+          <div class="label">Bestellungen heute</div>
+          <div class="value" id="st-completed">—</div>
+          <div class="sub">abgeschlossen</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="label">Aktiv gerade</div>
+          <div class="value" id="st-active">—</div>
+          <div class="sub">in Zubereitung</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="label">Bereit zur Abholung</div>
+          <div class="value" id="st-ready">—</div>
+          <div class="sub">warten auf Kellner</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="label">Ø Zubereitungszeit</div>
+          <div class="value" id="st-avg">—</div>
+          <div class="sub">Minuten</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Bestellungen nach Stunde (heute)</div>
+        <div class="bar-chart" id="barChart"></div>
+      </div>
+    </section>
+
+    <!-- ── STATIONEN ──────────────────────────────────────── -->
+    <section class="section" id="sec-stations">
+      <div class="section-header">
+        <h2>Stationen</h2>
+        <p>Definiere die Küchenstationen, die im POS-System und auf den Displays angezeigt werden</p>
+      </div>
+
+      <div class="info-box">
+        Stationen werden im POS-System beim Anlegen von Bestellungen vergeben (z.B. "grill", "bar"). Die hier vergebenen Namen und Farben erscheinen auf den Displays als Filter-Buttons.
+      </div>
+
+      <div class="settings-card">
+        <h3>Stationen verwalten</h3>
+        <div class="desc">Name und Farbe individuell anpassen</div>
+
+        <div class="station-list" id="stationList"></div>
+
+        <div class="add-station-form">
+          <input type="text" id="newStationLabel" placeholder="Name der neuen Station (z.B. Pizza)" maxlength="30">
+          <button class="btn btn-primary" onclick="addStation()">+ Hinzufügen</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── KÜCHEN-DISPLAY ─────────────────────────────────── -->
+    <section class="section" id="sec-kitchen-cfg">
+      <div class="section-header">
+        <h2>Küchen-Display</h2>
+        <p>Konfiguriere Dringlichkeits-Schwellenwerte und Verhalten des Küchen-Screens</p>
+      </div>
+
+      <div class="settings-card">
+        <h3>Dringlichkeit (Wartezeit-Anzeige)</h3>
+        <div class="desc">Ab wann wechselt die Farbe der Bestellkarte? Kürzere Zeiten = mehr Druck auf das Team.</div>
+
+        <div class="urgency-group" id="kitchen-urgency">
+          <div class="urgency-row">
+            <div class="urgency-label"><span class="urgency-dot" style="background:#f59e0b"></span>Gelb</div>
+            <input type="range" min="1" max="30" step="1" data-key="kitchen.urgencyYellow"
+                   oninput="onSlider(this)" onchange="markDirty()">
+            <div class="urgency-val" data-display="kitchen.urgencyYellow">5 min</div>
+          </div>
+          <div class="urgency-row">
+            <div class="urgency-label"><span class="urgency-dot" style="background:#f97316"></span>Orange</div>
+            <input type="range" min="1" max="45" step="1" data-key="kitchen.urgencyOrange"
+                   oninput="onSlider(this)" onchange="markDirty()">
+            <div class="urgency-val" data-display="kitchen.urgencyOrange">10 min</div>
+          </div>
+          <div class="urgency-row">
+            <div class="urgency-label"><span class="urgency-dot" style="background:#ef4444"></span>Rot</div>
+            <input type="range" min="1" max="60" step="1" data-key="kitchen.urgencyRed"
+                   oninput="onSlider(this)" onchange="markDirty()">
+            <div class="urgency-val" data-display="kitchen.urgencyRed">15 min</div>
+          </div>
+        </div>
+
+        <div class="urgency-preview" id="kitchen-preview">
+          <div class="up-seg up-green"></div>
+          <div class="up-seg up-yellow"></div>
+          <div class="up-seg up-orange"></div>
+          <div class="up-seg up-red"></div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:5px;text-align:right">Farbverlauf über die Zeit</div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Ton</h3>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Benachrichtigungston bei neuer Bestellung</div>
+            <div class="toggle-sub">Spielt einen Ton wenn eine neue Bestellung eingeht</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" data-key="kitchen.sound" onchange="onToggle(this); markDirty()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── AUSGABE-DISPLAY ────────────────────────────────── -->
+    <section class="section" id="sec-ausgabe-cfg">
+      <div class="section-header">
+        <h2>Ausgabe-Display</h2>
+        <p>Konfiguriere den Kellner-Screen an der Durchreiche</p>
+      </div>
+
+      <div class="settings-card">
+        <h3>Dringlichkeit (Abholzeit-Anzeige)</h3>
+        <div class="desc">Ab wann wechselt die Tischnummer-Box die Farbe? Engere Zeiten als in der Küche empfohlen – das Essen wartet bereits.</div>
+
+        <div class="urgency-group" id="ausgabe-urgency">
+          <div class="urgency-row">
+            <div class="urgency-label"><span class="urgency-dot" style="background:#f59e0b"></span>Gelb</div>
+            <input type="range" min="1" max="15" step="1" data-key="ausgabe.urgencyYellow"
+                   oninput="onSlider(this)" onchange="markDirty()">
+            <div class="urgency-val" data-display="ausgabe.urgencyYellow">2 min</div>
+          </div>
+          <div class="urgency-row">
+            <div class="urgency-label"><span class="urgency-dot" style="background:#f97316"></span>Orange</div>
+            <input type="range" min="1" max="20" step="1" data-key="ausgabe.urgencyOrange"
+                   oninput="onSlider(this)" onchange="markDirty()">
+            <div class="urgency-val" data-display="ausgabe.urgencyOrange">5 min</div>
+          </div>
+          <div class="urgency-row">
+            <div class="urgency-label"><span class="urgency-dot" style="background:#ef4444"></span>Rot</div>
+            <input type="range" min="1" max="30" step="1" data-key="ausgabe.urgencyRed"
+                   oninput="onSlider(this)" onchange="markDirty()">
+            <div class="urgency-val" data-display="ausgabe.urgencyRed">8 min</div>
+          </div>
+        </div>
+
+        <div class="urgency-preview" id="ausgabe-preview">
+          <div class="up-seg up-green"></div>
+          <div class="up-seg up-yellow"></div>
+          <div class="up-seg up-orange"></div>
+          <div class="up-seg up-red"></div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Ton</h3>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Benachrichtigungston bei bereitstehender Bestellung</div>
+            <div class="toggle-sub">Spielt einen Ton wenn Essen zur Abholung bereit ist</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" data-key="ausgabe.sound" onchange="onToggle(this); markDirty()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── BRANDING ───────────────────────────────────────── -->
+    <section class="section" id="sec-branding">
+      <div class="section-header">
+        <h2>Branding</h2>
+        <p>Name und Erscheinungsbild auf den Displays anpassen</p>
+      </div>
+
+      <div class="settings-card">
+        <h3>Restaurant</h3>
+        <div class="field-row">
+          <div class="field">
+            <label>Emoji / Symbol</label>
+            <input type="text" data-key="restaurant.logo" oninput="updateBrandingPreview(); markDirty()" maxlength="4" placeholder="🍳">
+          </div>
+          <div class="field">
+            <label>Restaurantname</label>
+            <input type="text" data-key="restaurant.name" oninput="updateBrandingPreview(); markDirty()" placeholder="Mein Restaurant">
+          </div>
+        </div>
+
+        <div class="preview-bar" id="brandingPreview">
+          <span class="preview-logo" id="previewLogo">🍳 Mein Restaurant</span>
+          <span style="color:#555;font-size:0.72rem;margin-left:auto">Vorschau auf den Displays</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── INTEGRATION ────────────────────────────────────── -->
+    <section class="section" id="sec-integration">
+      <div class="section-header">
+        <h2>Integration</h2>
+        <p>So verbindet sich das POS-System mit dem Küchen-Display</p>
+      </div>
+
+      <div class="settings-card">
+        <h3>Server-Adresse</h3>
+        <div class="desc">Diese URL muss vom POS-System erreichbar sein (gleiches Netzwerk).</div>
+        <div class="server-url">
+          <code id="serverUrl">http://localhost:3000</code>
+          <button class="btn btn-ghost btn-sm" onclick="copyUrl()">Kopieren</button>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>API-Endpunkte</h3>
+        <div class="endpoint-list">
+          <div class="endpoint">
+            <span class="method post">POST</span>
+            <div>
+              <div class="endpoint-path">/api/orders</div>
+              <div class="endpoint-desc">Neue Bestellung anlegen → erscheint sofort auf dem Küchen-Display</div>
+            </div>
+          </div>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <div>
+              <div class="endpoint-path">/api/orders</div>
+              <div class="endpoint-desc">Alle aktiven Bestellungen abrufen</div>
+            </div>
+          </div>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <div>
+              <div class="endpoint-path">/api/orders/history</div>
+              <div class="endpoint-desc">Abgeschlossene Bestellungen abrufen (max. 24h)</div>
+            </div>
+          </div>
+          <div class="endpoint">
+            <span class="method patch">PATCH</span>
+            <div>
+              <div class="endpoint-path">/api/orders/:id/status</div>
+              <div class="endpoint-desc">Status einer Bestellung ändern: new | in_progress | ready | completed</div>
+            </div>
+          </div>
+          <div class="endpoint">
+            <span class="method delete">DELETE</span>
+            <div>
+              <div class="endpoint-path">/api/orders/:id</div>
+              <div class="endpoint-desc">Bestellung als abgeschlossen markieren und von allen Displays entfernen</div>
+            </div>
+          </div>
+          <div class="endpoint">
+            <span class="method get">GET</span>
+            <div>
+              <div class="endpoint-path">/api/settings</div>
+              <div class="endpoint-desc">Aktuelle Konfiguration (Stationen, Schwellenwerte etc.) abrufen</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px">
+          <div style="font-size:0.82rem;font-weight:700;margin-bottom:6px">Beispiel: Bestellung anlegen</div>
+          <div class="code-block" id="codeExample"><button class="copy-btn" onclick="copyCode()">Kopieren</button>POST /api/orders HTTP/1.1
+Content-Type: application/json
+
+{
+  "order_number": "42",
+  "table_number": "7",
+  "server_name":  "Anna",
+  "notes":        "Nussallergie!",
+  "items": [
+    {
+      "name":      "Wiener Schnitzel",
+      "quantity":  2,
+      "modifiers": ["ohne Zitrone"],
+      "station":   "grill"
+    },
+    {
+      "name":    "Cola",
+      "quantity": 2,
+      "station": "bar"
+    }
+  ]
+}</div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── State ─────────────────────────────────────────────────────
+let S = null;   // settings object
+let dirty = false;
+
+// ── Navigation ────────────────────────────────────────────────
+const pageTitles = {
+  overview:     'Übersicht',
+  stations:     'Stationen',
+  'kitchen-cfg':  'Küchen-Display',
+  'ausgabe-cfg':  'Ausgabe-Display',
+  branding:     'Branding',
+  integration:  'Integration',
+};
+
+document.querySelectorAll('.nav-item[data-target]').forEach(el => {
+  el.addEventListener('click', () => {
+    if (dirty && !confirm('Ungespeicherte Änderungen verwerfen?')) return;
+    const t = el.dataset.target;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(`sec-${t}`).classList.add('active');
+    document.getElementById('pageTitle').textContent = pageTitles[t] || t;
+    if (t === 'overview') loadStats();
+    dirty = false;
+    document.getElementById('saveBtn').style.display = 'none';
+  });
+});
+
+// ── Load settings ─────────────────────────────────────────────
+async function loadSettings() {
+  const res = await fetch('/api/settings');
+  S = await res.json();
+  applyToForm(S);
+  updateBrandingPreview();
+  updatePreviewBars();
+  renderStations();
+}
+
+function applyToForm(s) {
+  // Sliders & text inputs
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const val = getPath(s, el.dataset.key);
+    if (val === undefined) return;
+    if (el.type === 'checkbox') el.checked = !!val;
+    else el.value = val;
+  });
+  // Update displayed values
+  document.querySelectorAll('[data-display]').forEach(el => {
+    const val = getPath(s, el.dataset.display);
+    if (val !== undefined) el.textContent = val + ' min';
+  });
+}
+
+function getPath(obj, path) {
+  return path.split('.').reduce((o, k) => o?.[k], obj);
+}
+function setPath(obj, path, val) {
+  const keys = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!cur[keys[i]]) cur[keys[i]] = {};
+    cur = cur[keys[i]];
+  }
+  cur[keys[keys.length - 1]] = val;
+}
+
+// ── Form interactions ─────────────────────────────────────────
+function onSlider(el) {
+  const val = +el.value;
+  const key = el.dataset.key;
+  setPath(S, key, val);
+  const disp = document.querySelector(`[data-display="${key}"]`);
+  if (disp) disp.textContent = val + ' min';
+  updatePreviewBars();
+}
+
+function onToggle(el) {
+  setPath(S, el.dataset.key, el.checked);
+}
+
+function markDirty() {
+  if (!dirty) {
+    dirty = true;
+    document.getElementById('saveBtn').style.display = 'inline-flex';
+    document.getElementById('savedBadge').classList.remove('show');
+  }
+}
+
+// ── Urgency preview bars ──────────────────────────────────────
+function updatePreviewBars() {
+  ['kitchen', 'ausgabe'].forEach(ns => {
+    const cfg = S?.[ns];
+    if (!cfg) return;
+    const y = cfg.urgencyYellow, o = cfg.urgencyOrange, r = cfg.urgencyRed;
+    const prev = document.getElementById(`${ns}-preview`);
+    if (!prev) return;
+    const segs = prev.querySelectorAll('.up-seg');
+    segs[0].style.flex = y;
+    segs[1].style.flex = (o - y);
+    segs[2].style.flex = (r - o);
+    segs[3].style.flex = Math.max(r * 0.5, 5);
+  });
+}
+
+// ── Branding preview ──────────────────────────────────────────
+function updateBrandingPreview() {
+  const logoInput = document.querySelector('[data-key="restaurant.logo"]');
+  const nameInput = document.querySelector('[data-key="restaurant.name"]');
+  const preview   = document.getElementById('previewLogo');
+  if (!preview) return;
+  const logo = logoInput?.value || '🍳';
+  const name = nameInput?.value || 'Restaurant';
+  preview.textContent = `${logo} ${name}`;
+}
+
+// ── Stations ──────────────────────────────────────────────────
+function renderStations() {
+  const list = document.getElementById('stationList');
+  list.innerHTML = '';
+  (S.stations || []).forEach((st, idx) => {
+    const row = document.createElement('div');
+    row.className = 'station-row';
+    row.dataset.idx = idx;
+    row.innerHTML = `
+      <button class="station-color-pick" title="Farbe wählen" style="background:${st.color}">
+        <input type="color" value="${st.color}" onchange="changeStationColor(${idx}, this.value)">
+      </button>
+      <input class="station-name-input" type="text" value="${esc(st.label)}"
+             oninput="changeStationLabel(${idx}, this.value)" maxlength="30">
+      <span class="station-id">${esc(st.id)}</span>
+      <button class="btn btn-danger btn-sm" onclick="deleteStation(${idx})">Löschen</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function changeStationColor(idx, color) {
+  S.stations[idx].color = color;
+  document.querySelector(`.station-row[data-idx="${idx}"] .station-color-pick`).style.background = color;
+  markDirty();
+}
+
+function changeStationLabel(idx, val) {
+  S.stations[idx].label = val;
+  markDirty();
+}
+
+function deleteStation(idx) {
+  if (!confirm(`Station "${S.stations[idx].label}" wirklich löschen?`)) return;
+  S.stations.splice(idx, 1);
+  renderStations();
+  markDirty();
+}
+
+function addStation() {
+  const input = document.getElementById('newStationLabel');
+  const label = input.value.trim();
+  if (!label) return alert('Bitte einen Namen eingeben.');
+  const id = label.toLowerCase()
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  if (S.stations.some(s => s.id === id)) return alert('Eine Station mit dieser ID existiert bereits.');
+  const colors = ['#ff7043','#00c896','#ffc107','#9c6eff','#f06292','#00b0ff'];
+  const color  = colors[S.stations.length % colors.length];
+  S.stations.push({ id, label, color });
+  input.value = '';
+  renderStations();
+  markDirty();
+}
+
+// ── Save ──────────────────────────────────────────────────────
+async function saveSettings() {
+  await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(S),
+  });
+  dirty = false;
+  document.getElementById('saveBtn').style.display = 'none';
+  const badge = document.getElementById('savedBadge');
+  badge.classList.add('show');
+  setTimeout(() => badge.classList.remove('show'), 2500);
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+async function loadStats() {
+  const res  = await fetch('/api/stats');
+  const data = await res.json();
+  document.getElementById('st-completed').textContent = data.today.completed;
+  document.getElementById('st-active').textContent    = data.active;
+  document.getElementById('st-ready').textContent     = data.ready;
+  document.getElementById('st-avg').textContent       = data.today.avgMinutes ?? '—';
+  renderChart(data.hourly);
+}
+
+function renderChart(hourly) {
+  const chart   = document.getElementById('barChart');
+  const max     = Math.max(...hourly, 1);
+  const curHour = new Date().getHours();
+  chart.innerHTML = '';
+  hourly.forEach((v, h) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bar-wrap';
+    const bar = document.createElement('div');
+    bar.className = 'bar' + (h === curHour ? ' current' : '');
+    bar.style.height = Math.max((v / max) * 74, 2) + 'px';
+    bar.title = `${h}:00 – ${v} Bestellungen`;
+    const lbl = document.createElement('div');
+    lbl.className = 'bar-lbl';
+    lbl.textContent = h % 4 === 0 ? h : '';
+    wrap.appendChild(bar);
+    wrap.appendChild(lbl);
+    chart.appendChild(wrap);
+  });
+}
+
+// ── Utilities ─────────────────────────────────────────────────
+const esc = s => String(s||'')
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function copyUrl() {
+  navigator.clipboard.writeText(document.getElementById('serverUrl').textContent)
+    .then(() => alert('URL kopiert!'));
+}
+
+function copyCode() {
+  const txt = document.getElementById('codeExample').innerText.replace('Kopieren\n','').trim();
+  navigator.clipboard.writeText(txt).then(() => alert('Code kopiert!'));
+}
+
+document.getElementById('serverUrl').textContent = `http://${location.hostname}:${location.port || 80}`;
+
+// ── Boot ──────────────────────────────────────────────────────
+loadSettings();
+loadStats();
+</script>
+</body>
+</html>

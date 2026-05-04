@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ausgabe-Display</title>
+<style>
+:root {
+  --bg:       #0a0f0d;
+  --surface:  #111815;
+  --surface2: #192119;
+  --border:   #263026;
+  --text:     #f0f0f0;
+  --muted:    #6b7a6e;
+  --green:    #00d98b;
+  --green2:   #00b873;
+  --yellow:   #ffc107;
+  --orange:   #ff7043;
+  --red:      #f44336;
+  --purple:   #9c6eff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ─────────────────────────────── */
+header {
+  background: #0d1410;
+  border-bottom: 2px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  gap: 12px; user-select: none;
+}
+
+.logo { font-size: 1.25rem; font-weight: 800; color: var(--green); letter-spacing: 1px; }
+
+.conn-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; color: var(--muted);
+}
+.conn-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); transition: background 0.4s;
+}
+.conn-dot.on { background: var(--green); }
+
+.waiting-count {
+  font-size: 1.6rem; font-weight: 900; color: var(--green);
+  display: flex; align-items: baseline; gap: 6px;
+}
+.waiting-count span { font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+.waiting-count.urgent { color: var(--orange); }
+
+.clock {
+  font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--muted); min-width: 78px; text-align: right;
+}
+
+/* ── GRID ───────────────────────────────── */
+.grid {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  align-items: start;
+  flex: 1;
+}
+
+.empty {
+  grid-column: 1/-1; text-align: center;
+  padding: 100px 20px; color: var(--muted);
+}
+.empty-icon { font-size: 4rem; margin-bottom: 16px; }
+.empty-txt  { font-size: 1.1rem; }
+
+/* ── ORDER CARD ─────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--green);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow 0.4s;
+}
+
+.card[data-wait="1"] { border-top-color: var(--yellow); }
+.card[data-wait="2"] { border-top-color: var(--orange); }
+.card[data-wait="3"] {
+  border-top-color: var(--red);
+  animation: pulse-red 1.4s ease-in-out infinite;
+}
+
+/* Almost-ready: cutlery not yet confirmed → yellow pulse */
+.card[data-status="almost_ready"][data-cutlery="0"] {
+  border-top-color: var(--yellow) !important;
+  animation: pulse-yellow 1.3s ease-in-out infinite !important;
+}
+/* Almost-ready: cutlery confirmed → blue, waiting for kitchen */
+.card[data-status="almost_ready"][data-cutlery="1"] {
+  border-top-color: #448aff !important;
+  animation: none !important;
+  box-shadow: 0 0 10px rgba(68,138,255,.2);
+}
+
+@keyframes pulse-yellow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,193,7,.5); }
+  50%      { box-shadow: 0 0 0 8px rgba(255,193,7,0); }
+}
+
+.cutlery-banner {
+  padding: 10px 16px;
+  background: rgba(255,193,7,.12);
+  border-bottom: 1px solid rgba(255,193,7,.25);
+  font-size: 0.9rem; font-weight: 800;
+  color: var(--yellow); letter-spacing: 0.3px;
+  display: flex; align-items: center; gap: 8px;
+}
+.cutlery-ok-banner {
+  padding: 8px 16px;
+  background: rgba(68,138,255,.08);
+  border-bottom: 1px solid rgba(68,138,255,.2);
+  font-size: 0.82rem; font-weight: 600; color: #448aff;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.btn-cutlery {
+  width: 100%; padding: 13px;
+  background: var(--yellow); color: #000;
+  border: none; border-radius: 8px;
+  font-weight: 900; font-size: 1rem; cursor: pointer;
+  transition: all 0.12s;
+}
+.btn-cutlery:hover  { background: #ffd740; transform: translateY(-1px); }
+.btn-cutlery:active { transform: none; }
+
+.btn-waiting-kitchen {
+  width: 100%; padding: 13px;
+  background: rgba(68,138,255,.08); color: #448aff;
+  border: 1px solid rgba(68,138,255,.25); border-radius: 8px;
+  font-weight: 700; font-size: 0.88rem; cursor: default;
+  letter-spacing: 0.2px;
+}
+
+@keyframes pulse-red {
+  0%,100% { box-shadow: 0 0 0 0 rgba(244,67,54,.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(244,67,54,0); }
+}
+
+/* Card header — TABLE NUMBER is king */
+.card-hd {
+  padding: 14px 16px;
+  background: var(--surface2);
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+}
+
+.tisch-box {
+  background: var(--green);
+  border-radius: 10px;
+  padding: 10px 22px;
+  text-align: center;
+  min-width: 130px;
+  flex-shrink: 0;
+}
+.card[data-wait="1"] .tisch-box { background: var(--yellow); }
+.card[data-wait="2"] .tisch-box { background: var(--orange); }
+.card[data-wait="3"] .tisch-box { background: var(--red); }
+
+.tisch-label {
+  font-size: 0.62rem; font-weight: 800; color: rgba(0,0,0,0.5);
+  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
+}
+
+.tisch-num {
+  font-size: 5rem; font-weight: 900; line-height: 1;
+  color: #000; letter-spacing: -2px;
+}
+
+.tisch-none {
+  font-size: 2rem; font-weight: 900; color: rgba(0,0,0,0.4);
+}
+
+.card-meta { text-align: right; flex: 1; }
+.order-num  { font-size: 1rem; font-weight: 700; color: var(--text); }
+.srv-name   { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+.wait-timer {
+  display: block; margin-top: 6px;
+  font-size: 0.82rem; font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.wait-timer.warn  { color: var(--yellow); font-weight: 700; }
+.wait-timer.alert { color: var(--red);    font-weight: 700; }
+
+/* Items */
+.card-items { padding: 10px 16px; flex: 1; }
+
+.item {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.item:last-child { border-bottom: none; }
+
+.item-qty  { font-weight: 900; color: var(--green); font-size: 1rem; min-width: 24px; }
+.item-body { flex: 1; }
+.item-name { font-size: 0.95rem; font-weight: 500; }
+
+.mods { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.mod  {
+  font-size: 0.68rem; padding: 1px 7px;
+  background: rgba(255,255,255,.06); border-radius: 10px; color: var(--muted);
+}
+.item-note { font-size: 0.72rem; color: var(--orange); margin-top: 2px; font-style: italic; }
+
+/* Order notes */
+.card-note {
+  margin: 0 16px 10px; padding: 7px 11px;
+  background: rgba(255,112,67,.1); border-left: 3px solid var(--orange);
+  border-radius: 5px; font-size: 0.8rem; color: var(--orange); font-weight: 600;
+}
+
+/* Footer */
+.card-ft {
+  padding: 12px 16px;
+  background: var(--surface2);
+}
+
+.btn-abgeholt {
+  width: 100%; padding: 13px;
+  background: var(--green); color: #000;
+  border: none; border-radius: 8px;
+  font-weight: 900; font-size: 1rem;
+  letter-spacing: 0.5px; cursor: pointer;
+  transition: all 0.12s;
+}
+.btn-abgeholt:hover  { background: #00f0a0; transform: translateY(-1px); }
+.btn-abgeholt:active { transform: none; }
+
+/* Animations */
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: none; }
+}
+.card { animation: slide-down 0.25s ease-out; }
+
+@keyframes fadeout { to { opacity: 0; transform: scale(0.92); } }
+.removing { animation: fadeout 0.28s ease-in forwards; }
+
+/* Toasts */
+.toast-wrap {
+  position: fixed; top: 72px; right: 14px; z-index: 500;
+  display: flex; flex-direction: column; gap: 7px; pointer-events: none;
+}
+.toast {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-left: 3px solid var(--green); padding: 10px 16px;
+  border-radius: 8px; font-size: 0.84rem; max-width: 280px;
+  animation: slide-in 0.2s ease-out;
+}
+@keyframes slide-in  { from { transform: translateX(110%); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes slide-out { to   { transform: translateX(110%); opacity:0; } }
+.toast.out { animation: slide-out 0.2s ease-in forwards; }
+
+/* Flash on new ready order */
+@keyframes flash-green {
+  0%   { box-shadow: 0 0 0 0 rgba(0,217,139,.8); }
+  100% { box-shadow: 0 0 0 20px rgba(0,217,139,0); }
+}
+.new-flash { animation: flash-green 0.7s ease-out !important; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:18px">
+    <div class="logo">&#127860; AUSGABE</div>
+    <div class="conn-badge">
+      <div class="conn-dot" id="dot"></div>
+      <span id="conn-lbl">Verbinde…</span>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:20px;align-items:center">
+    <div id="count-block" class="waiting-count" title="Besteck eindecken">
+      <span id="count-cutlery">0</span>
+      <span>&#127860; Besteck</span>
+    </div>
+    <div class="waiting-count" title="Bereit zur Abholung">
+      <span id="count-ready">0</span>
+      <span>&#10003; Abholung</span>
+    </div>
+  </div>
+
+  <div class="clock" id="clock"></div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────
+let orders   = {};
+let ws       = null;
+let audioCtx = null;
+let cfg      = { urgencyYellow: 2, urgencyOrange: 5, urgencyRed: 8 };
+
+// ── WebSocket ─────────────────────────────────────────────────
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+
+  ws.onopen    = () => setConn(true);
+  ws.onclose   = () => { setConn(false); setTimeout(connect, 3000); };
+  ws.onerror   = () => ws.close();
+  ws.onmessage = e  => handle(JSON.parse(e.data));
+}
+
+function setConn(ok) {
+  document.getElementById('dot').classList.toggle('on', ok);
+  document.getElementById('conn-lbl').textContent = ok ? 'Verbunden' : 'Getrennt – verbinde…';
+}
+
+function applySettings(s) {
+  if (!s) return;
+  if (s.ausgabe) Object.assign(cfg, s.ausgabe);
+  if (s.restaurant) {
+    const el = document.querySelector('.logo');
+    if (el) el.textContent = (s.restaurant.logo || '🛎') + ' AUSGABE';
+  }
+}
+
+function handle(msg) {
+  switch (msg.type) {
+
+    case 'init':
+      orders = {};
+      msg.orders.forEach(o => {
+        if (o.status === 'ready' || o.status === 'almost_ready') orders[o.id] = o;
+      });
+      applySettings(msg.settings);
+      renderAll();
+      break;
+    case 'settings_updated':
+      applySettings(msg.settings);
+      break;
+
+    case 'order_new':
+      // New orders aren't ready yet, ignore
+      break;
+
+    case 'order_updated': {
+      const o = msg.order;
+      const wasHere = !!orders[o.id];
+      if (o.status === 'ready' || o.status === 'almost_ready') {
+        orders[o.id] = o;
+        if (!wasHere) {
+          renderAll();
+          setTimeout(() => flash(o.id), 40);
+          if (o.status === 'almost_ready') {
+            beepCutlery();
+            toast(`&#127860; Tisch ${o.table_number || '—'} — Besteck eindecken!`);
+          } else {
+            beep();
+            toast(`Tisch ${o.table_number || '—'} • #${o.order_number} ist bereit!`);
+          }
+        } else {
+          refreshCard(o);
+        }
+      } else if (wasHere) {
+        delete orders[o.id];
+        removeCard(o.id);
+      }
+      break;
+    }
+
+    case 'order_completed':
+      if (orders[msg.orderId]) {
+        delete orders[msg.orderId];
+        removeCard(msg.orderId);
+      }
+      break;
+  }
+  updateCount();
+}
+
+// ── Sound ─────────────────────────────────────────────────────
+function beepCutlery() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    [1100, 900, 1100].forEach((f, i) => {
+      const osc = audioCtx.createOscillator();
+      const g   = audioCtx.createGain();
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.type = 'triangle'; osc.frequency.value = f;
+      const t = audioCtx.currentTime + i * 0.13;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.25, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+      osc.start(t); osc.stop(t + 0.13);
+    });
+  } catch (_) {}
+}
+
+function beep() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Two-tone "ding ding" for pickup
+    [880, 1108.73].forEach((f, i) => {
+      const osc = audioCtx.createOscillator();
+      const g   = audioCtx.createGain();
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.type = 'sine'; osc.frequency.value = f;
+      const t = audioCtx.currentTime + i * 0.22;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.4, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+      osc.start(t); osc.stop(t + 0.6);
+    });
+  } catch (_) {}
+}
+document.addEventListener('click', () => {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}, { once: true });
+
+// ── Helpers ───────────────────────────────────────────────────
+const esc = s => s == null ? '' : String(s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function waitSince(updatedAt) {
+  return Math.floor((Date.now() - new Date(updatedAt).getTime()) / 1000);
+}
+function fmt(sec) {
+  return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;
+}
+function waitUrgency(sec) {
+  if (sec < cfg.urgencyYellow * 60) return 0;
+  if (sec < cfg.urgencyOrange * 60) return 1;
+  if (sec < cfg.urgencyRed   * 60) return 2;
+  return 3;
+}
+
+// ── Build card ────────────────────────────────────────────────
+function buildCard(o) {
+  const sec  = waitSince(o.updated_at);
+  const urg  = o.status === 'almost_ready' ? 0 : waitUrgency(sec);
+  const timerClass = urg >= 2 ? ' alert' : urg === 1 ? ' warn' : '';
+  const isAlmost   = o.status === 'almost_ready';
+  const cutleryOk  = !!o.cutlery_confirmed;
+
+  const itemsHtml = o.items.map(item => `
+    <div class="item">
+      <span class="item-qty">${item.quantity}&times;</span>
+      <div class="item-body">
+        <span class="item-name">${esc(item.name)}</span>
+        ${item.modifiers?.length
+          ? `<div class="mods">${item.modifiers.map(m=>`<span class="mod">${esc(m)}</span>`).join('')}</div>`
+          : ''}
+        ${item.notes ? `<div class="item-note">&#128221; ${esc(item.notes)}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  const topBanner = isAlmost
+    ? (cutleryOk
+        ? `<div class="cutlery-ok-banner">&#10003; Besteck eingedeckt — Küche bereitet noch vor</div>`
+        : `<div class="cutlery-banner">&#127860; BESTECK EINDECKEN — Tisch ${esc(o.table_number || '—')}</div>`)
+    : '';
+
+  const footerBtn = isAlmost
+    ? (cutleryOk
+        ? `<button class="btn-waiting-kitchen">&#9203; Wartet auf Küche...</button>`
+        : `<button class="btn-cutlery" onclick="confirmCutlery(${o.id})">&#127860;&ensp;BESTECK EINGEDECKT &#10003;</button>`)
+    : `<button class="btn-abgeholt" onclick="abgeholt(${o.id})">&#10003;&ensp;ABGEHOLT</button>`;
+
+  return `
+    <div class="card" id="c${o.id}"
+         data-id="${o.id}" data-status="${o.status}"
+         data-cutlery="${cutleryOk ? 1 : 0}"
+         data-wait="${urg}" data-updated="${o.updated_at}">
+      ${topBanner}
+      <div class="card-hd">
+        <div class="tisch-box">
+          <div class="tisch-label">Tisch</div>
+          ${o.table_number
+            ? `<div class="tisch-num">${esc(o.table_number)}</div>`
+            : `<div class="tisch-none">—</div>`}
+        </div>
+        <div class="card-meta">
+          <div class="order-num">#${esc(o.order_number)}</div>
+          ${o.server_name ? `<div class="srv-name">${esc(o.server_name)}</div>` : ''}
+          <span class="wait-timer${timerClass}">&#9203; ${fmt(sec)} min</span>
+        </div>
+      </div>
+      <div class="card-items">${itemsHtml}</div>
+      ${o.notes ? `<div class="card-note">&#9888; ${esc(o.notes)}</div>` : ''}
+      <div class="card-ft">${footerBtn}</div>
+    </div>`;
+}
+
+// ── Render ────────────────────────────────────────────────────
+function readyList() {
+  return Object.values(orders)
+    .sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at));
+}
+
+function renderAll() {
+  const list = readyList();
+  const grid = document.getElementById('grid');
+  if (!list.length) {
+    grid.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">&#128994;</div>
+        <div class="empty-txt">Alle Bestellungen wurden abgeholt</div>
+      </div>`;
+  } else {
+    grid.innerHTML = list.map(buildCard).join('');
+  }
+  updateCount();
+}
+
+function refreshCard(o) {
+  const el = document.getElementById(`c${o.id}`);
+  if (!el) { renderAll(); return; }
+  const tmp = document.createElement('div');
+  tmp.innerHTML = buildCard(o);
+  el.replaceWith(tmp.firstElementChild);
+}
+
+function removeCard(id) {
+  const el = document.getElementById(`c${id}`);
+  if (!el) return;
+  el.classList.add('removing');
+  setTimeout(() => {
+    el.remove();
+    if (!document.getElementById('grid').querySelector('.card')) renderAll();
+  }, 300);
+}
+
+function flash(id) {
+  const el = document.getElementById(`c${id}`);
+  if (!el) return;
+  el.classList.add('new-flash');
+  setTimeout(() => el.classList.remove('new-flash'), 750);
+}
+
+// ── Timers ────────────────────────────────────────────────────
+setInterval(() => {
+  document.querySelectorAll('.card').forEach(card => {
+    const id  = +card.dataset.id;
+    const o   = orders[id];
+    if (!o) return;
+    const sec = waitSince(card.dataset.updated);
+    const urg = waitUrgency(sec);
+    card.dataset.wait = urg;
+
+    const tw = card.querySelector('.wait-timer');
+    if (tw) {
+      tw.textContent = `⏱ ${fmt(sec)} min`;
+      tw.className   = 'wait-timer' + (urg >= 2 ? ' alert' : urg === 1 ? ' warn' : '');
+    }
+    const tn = card.querySelector('.tisch-num');
+    // tisch-num color follows data-wait via CSS
+  });
+  updateCount();
+}, 1000);
+
+function updateCount() {
+  const list    = Object.values(orders);
+  const cutlery = list.filter(o => o.status === 'almost_ready').length;
+  const ready   = list.filter(o => o.status === 'ready').length;
+  document.getElementById('count-cutlery').textContent = cutlery;
+  document.getElementById('count-ready').textContent   = ready;
+  const blk = document.getElementById('count-block');
+  if (blk) blk.className = 'waiting-count' + (cutlery > 0 ? ' urgent' : '');
+}
+
+// ── Clock ─────────────────────────────────────────────────────
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(), n.getMinutes(), n.getSeconds()]
+      .map(v => String(v).padStart(2,'0')).join(':');
+}
+setInterval(tick, 1000); tick();
+
+// ── Action ───────────────────────────────────────────────────
+function confirmCutlery(orderId) {
+  const o = orders[orderId];
+  if (!o) return;
+  o.cutlery_confirmed = true;
+  refreshCard(o);
+  fetch(`/api/orders/${orderId}/cutlery`, { method: 'PATCH' }).catch(console.error);
+}
+
+function abgeholt(orderId) {
+  delete orders[orderId];
+  removeCard(orderId);
+  updateCount();
+  fetch(`/api/orders/${orderId}`, { method: 'DELETE' }).catch(console.error);
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg) {
+  const box = document.getElementById('toasts');
+  const el  = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 220);
+  }, 4000);
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+renderAll();
+connect();
+</script>
+</body>
+</html>

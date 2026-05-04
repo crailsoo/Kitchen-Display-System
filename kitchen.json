@@ -1,0 +1,405 @@
+{
+  "nextId": 9,
+  "store": {
+    "orders": {
+      "1": {
+        "id": 1,
+        "order_number": "60",
+        "table_number": "3",
+        "server_name": "Anna",
+        "notes": null,
+        "status": "completed",
+        "created_at": "2026-05-04T22:37:14.181Z",
+        "updated_at": "2026-05-04T22:37:58.389Z",
+        "completed_at": "2026-05-04T22:37:58.389Z",
+        "items": [
+          {
+            "id": 1001,
+            "order_id": 1,
+            "name": "Classic Burger",
+            "quantity": 2,
+            "modifiers": [
+              "medium"
+            ],
+            "notes": null,
+            "station": "grill",
+            "status": "pending"
+          },
+          {
+            "id": 1002,
+            "order_id": 1,
+            "name": "Pommes frites",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "küche",
+            "status": "pending"
+          },
+          {
+            "id": 1003,
+            "order_id": 1,
+            "name": "Cola",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          }
+        ]
+      },
+      "2": {
+        "id": 2,
+        "order_number": "37",
+        "table_number": "2",
+        "server_name": "Stefan",
+        "notes": null,
+        "status": "completed",
+        "created_at": "2026-05-04T22:38:49.286Z",
+        "updated_at": "2026-05-04T22:46:33.709Z",
+        "completed_at": "2026-05-04T22:46:33.709Z",
+        "items": [
+          {
+            "id": 2001,
+            "order_id": 2,
+            "name": "Pizza Margherita",
+            "quantity": 1,
+            "modifiers": [
+              "extra Käse"
+            ],
+            "notes": null,
+            "station": "küche",
+            "status": "pending"
+          },
+          {
+            "id": 2002,
+            "order_id": 2,
+            "name": "Spaghetti Bolognese",
+            "quantity": 1,
+            "modifiers": [],
+            "notes": null,
+            "station": "küche",
+            "status": "pending"
+          },
+          {
+            "id": 2003,
+            "order_id": 2,
+            "name": "Kinder-Menü Nuggets",
+            "quantity": 1,
+            "modifiers": [
+              "ohne Dip"
+            ],
+            "notes": null,
+            "station": "küche",
+            "status": "pending"
+          },
+          {
+            "id": 2004,
+            "order_id": 2,
+            "name": "Apfelschorle",
+            "quantity": 1,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          }
+        ]
+      },
+      "3": {
+        "id": 3,
+        "order_number": "38",
+        "table_number": null,
+        "server_name": "Julia",
+        "notes": "Take-away – bitte Becher beschriften",
+        "status": "completed",
+        "created_at": "2026-05-04T22:38:51.381Z",
+        "updated_at": "2026-05-04T22:48:16.589Z",
+        "completed_at": "2026-05-04T22:48:16.589Z",
+        "items": [
+          {
+            "id": 3001,
+            "order_id": 3,
+            "name": "Espresso",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          },
+          {
+            "id": 3002,
+            "order_id": 3,
+            "name": "Cappuccino",
+            "quantity": 1,
+            "modifiers": [
+              "extra shot"
+            ],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          },
+          {
+            "id": 3003,
+            "order_id": 3,
+            "name": "Orangensaft frisch",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          }
+        ]
+      },
+      "4": {
+        "id": 4,
+        "order_number": "39",
+        "table_number": "8",
+        "server_name": "Markus",
+        "notes": "Bitte schnell zubereiten!",
+        "status": "completed",
+        "created_at": "2026-05-04T22:38:53.133Z",
+        "updated_at": "2026-05-04T23:15:28.470Z",
+        "completed_at": "2026-05-04T23:15:28.470Z",
+        "items": [
+          {
+            "id": 4001,
+            "order_id": 4,
+            "name": "Ribeye Steak 300g",
+            "quantity": 1,
+            "modifiers": [
+              "medium-rare"
+            ],
+            "notes": null,
+            "station": "grill",
+            "status": "pending"
+          },
+          {
+            "id": 4002,
+            "order_id": 4,
+            "name": "Caesar Salat",
+            "quantity": 1,
+            "modifiers": [
+              "ohne Croutons"
+            ],
+            "notes": null,
+            "station": "cold",
+            "status": "pending"
+          },
+          {
+            "id": 4003,
+            "order_id": 4,
+            "name": "Mineralwasser",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          }
+        ]
+      },
+      "5": {
+        "id": 5,
+        "order_number": "44",
+        "table_number": "8",
+        "server_name": "Markus",
+        "notes": "Bitte schnell zubereiten!",
+        "status": "completed",
+        "created_at": "2026-05-04T22:48:21.653Z",
+        "updated_at": "2026-05-04T22:48:50.581Z",
+        "completed_at": "2026-05-04T22:48:50.581Z",
+        "items": [
+          {
+            "id": 5001,
+            "order_id": 5,
+            "name": "Ribeye Steak 300g",
+            "quantity": 1,
+            "modifiers": [
+              "medium-rare"
+            ],
+            "notes": null,
+            "station": "grill",
+            "status": "pending"
+          },
+          {
+            "id": 5002,
+            "order_id": 5,
+            "name": "Caesar Salat",
+            "quantity": 1,
+            "modifiers": [
+              "ohne Croutons"
+            ],
+            "notes": null,
+            "station": "cold",
+            "status": "pending"
+          },
+          {
+            "id": 5003,
+            "order_id": 5,
+            "name": "Mineralwasser",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          }
+        ]
+      },
+      "6": {
+        "id": 6,
+        "order_number": "45",
+        "table_number": "3",
+        "server_name": "Anna",
+        "notes": null,
+        "status": "completed",
+        "created_at": "2026-05-04T22:48:22.445Z",
+        "updated_at": "2026-05-04T23:15:27.392Z",
+        "completed_at": "2026-05-04T23:15:27.392Z",
+        "items": [
+          {
+            "id": 6001,
+            "order_id": 6,
+            "name": "Classic Burger",
+            "quantity": 2,
+            "modifiers": [
+              "medium"
+            ],
+            "notes": null,
+            "station": "grill",
+            "status": "pending"
+          },
+          {
+            "id": 6002,
+            "order_id": 6,
+            "name": "Pommes frites",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "küche",
+            "status": "pending"
+          },
+          {
+            "id": 6003,
+            "order_id": 6,
+            "name": "Cola",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          }
+        ]
+      },
+      "7": {
+        "id": 7,
+        "order_number": "46",
+        "table_number": "3",
+        "server_name": "Anna",
+        "notes": null,
+        "status": "new",
+        "created_at": "2026-05-04T23:15:32.566Z",
+        "updated_at": "2026-05-04T23:15:32.566Z",
+        "completed_at": null,
+        "cutlery_confirmed": false,
+        "items": [
+          {
+            "id": 7001,
+            "order_id": 7,
+            "name": "Classic Burger",
+            "quantity": 2,
+            "modifiers": [
+              "medium"
+            ],
+            "notes": null,
+            "station": "grill",
+            "status": "pending"
+          },
+          {
+            "id": 7002,
+            "order_id": 7,
+            "name": "Pommes frites",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "küche",
+            "status": "pending"
+          },
+          {
+            "id": 7003,
+            "order_id": 7,
+            "name": "Cola",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          }
+        ]
+      },
+      "8": {
+        "id": 8,
+        "order_number": "47",
+        "table_number": "12",
+        "server_name": "Lisa",
+        "notes": "⚠ Gast mit Erdnussallergie am Tisch!",
+        "status": "completed",
+        "created_at": "2026-05-04T23:15:33.414Z",
+        "updated_at": "2026-05-04T23:15:52.750Z",
+        "completed_at": "2026-05-04T23:15:52.750Z",
+        "cutlery_confirmed": true,
+        "items": [
+          {
+            "id": 8001,
+            "order_id": 8,
+            "name": "Wiener Schnitzel",
+            "quantity": 2,
+            "modifiers": [
+              "ohne Zitrone"
+            ],
+            "notes": null,
+            "station": "grill",
+            "status": "pending"
+          },
+          {
+            "id": 8002,
+            "order_id": 8,
+            "name": "Suppe des Tages",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "küche",
+            "status": "pending"
+          },
+          {
+            "id": 8003,
+            "order_id": 8,
+            "name": "Gemischter Salat",
+            "quantity": 1,
+            "modifiers": [],
+            "notes": null,
+            "station": "cold",
+            "status": "pending"
+          },
+          {
+            "id": 8004,
+            "order_id": 8,
+            "name": "Grüner Veltliner 0,2",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "bar",
+            "status": "pending"
+          },
+          {
+            "id": 8005,
+            "order_id": 8,
+            "name": "Tiramisu",
+            "quantity": 2,
+            "modifiers": [],
+            "notes": null,
+            "station": "dessert",
+            "status": "pending"
+          }
+        ]
+      }
+    }
+  }
+}

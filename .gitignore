@@ -1,0 +1,4 @@
+node_modules/
+kitchen.db
+kitchen.db-wal
+kitchen.db-shm

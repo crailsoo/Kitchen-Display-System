@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kitchen Display System — Demo</title>
+<style>
+:root {
+  --bg:      #0d0d0d;
+  --surface: #1a1a1a;
+  --surface2:#222;
+  --border:  #2e2e2e;
+  --text:    #f0f0f0;
+  --muted:   #777;
+  --green:   #00c896;
+  --yellow:  #ffc107;
+  --orange:  #ff7043;
+  --red:     #f44336;
+  --purple:  #9c6eff;
+  --blue:    #448aff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+
+/* ── DEMO BANNER ── */
+.demo-banner {
+  background: linear-gradient(90deg, #1a1a2e, #16213e);
+  border-bottom: 2px solid var(--blue);
+  padding: 8px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap;
+}
+.demo-title { font-size: 0.8rem; font-weight: 700; color: var(--blue); letter-spacing: 0.5px; }
+.demo-desc  { font-size: 0.72rem; color: #8899bb; }
+.demo-actions { display: flex; gap: 8px; }
+.btn-demo {
+  padding: 6px 14px; border-radius: 6px; border: none; font-size: 0.78rem;
+  font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn-new-order { background: var(--green); color: #000; }
+.btn-new-order:hover { background: #00e0a8; }
+.btn-reset { background: rgba(255,255,255,.08); color: var(--muted); border: 1px solid var(--border); }
+.btn-reset:hover { border-color: var(--red); color: var(--red); }
+
+/* ── HEADER ── */
+header {
+  background: #111; border-bottom: 2px solid var(--border);
+  padding: 10px 20px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; user-select: none;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { font-size: 1.25rem; font-weight: 800; color: var(--green); letter-spacing: 1px; }
+.conn-badge { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); }
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.header-stats { display: flex; gap: 28px; }
+.stat { text-align: center; }
+.stat-val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.stat-lbl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
+.stat-val.warn  { color: var(--yellow); }
+.stat-val.alert { color: var(--red); }
+.clock { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); min-width: 78px; text-align: right; }
+
+/* ── FILTER BAR ── */
+.filters {
+  background: #111; border-bottom: 1px solid var(--border);
+  padding: 7px 20px; display: flex; gap: 7px; overflow-x: auto;
+}
+.filters::-webkit-scrollbar { height: 0; }
+.fbtn {
+  padding: 4px 14px; border-radius: 20px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-size: 0.78rem;
+  white-space: nowrap; transition: all 0.15s;
+}
+.fbtn:hover, .fbtn.active {
+  background: var(--green); border-color: var(--green); color: #000; font-weight: 700;
+}
+
+/* ── GRID ── */
+.grid {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+  gap: 12px; align-items: start; flex: 1;
+}
+.empty { grid-column: 1/-1; text-align: center; padding: 80px 20px; color: var(--muted); }
+.empty-icon { font-size: 3rem; margin-bottom: 12px; }
+.empty-txt  { font-size: 1rem; }
+
+/* ── ORDER CARD ── */
+.card {
+  background: var(--surface); border-radius: 10px;
+  border: 1px solid var(--border); border-left: 5px solid var(--green);
+  display: flex; flex-direction: column; overflow: hidden;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+.card[data-urgency="1"] { border-left-color: var(--yellow); }
+.card[data-urgency="2"] { border-left-color: var(--orange); }
+.card[data-urgency="3"] { border-left-color: var(--red); animation: pulse 1.6s ease-in-out infinite; }
+.card[data-status="ready"] { border-left-color: var(--purple); box-shadow: 0 0 14px rgba(156,110,255,.25); }
+.card[data-status="almost_ready"] { border-left-color: var(--yellow); box-shadow: 0 0 10px rgba(255,193,7,.15); }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(244,67,54,.5); }
+  50%      { box-shadow: 0 0 0 7px rgba(244,67,54,0); }
+}
+
+.card-hd {
+  padding: 9px 12px; background: var(--surface2);
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+}
+.order-num { font-size: 1.35rem; font-weight: 900; line-height: 1; }
+.table-num { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.card-time { text-align: right; }
+.timer     { display: block; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.srv-name  { font-size: 0.68rem; color: var(--muted); }
+
+.card-items { padding: 6px 12px; flex: 1; }
+.item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 7px 4px; border-bottom: 1px solid rgba(255,255,255,.05);
+  cursor: pointer; border-radius: 5px; transition: background 0.12s;
+}
+.item:last-child { border-bottom: none; }
+.item:hover { background: rgba(255,255,255,.04); }
+.item.done .item-name, .item.done .item-qty { opacity: 0.3; text-decoration: line-through; }
+.check {
+  flex-shrink: 0; margin-top: 2px;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; transition: all 0.2s;
+}
+.item.done .check { background: var(--green); border-color: var(--green); color: #000; }
+.item.done .check::after { content: '✓'; font-weight: 900; }
+.item-qty  { font-weight: 800; color: var(--yellow); min-width: 22px; font-size: 0.9rem; }
+.item-body { flex: 1; }
+.item-name { font-size: 0.95rem; font-weight: 500; }
+.mods { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.mod  { font-size: 0.68rem; padding: 1px 7px; background: rgba(255,255,255,.07); border-radius: 10px; color: var(--muted); }
+.item-note { font-size: 0.73rem; color: var(--orange); margin-top: 2px; font-style: italic; }
+.station-tag {
+  font-size: 0.62rem; padding: 1px 5px;
+  background: rgba(68,138,255,.15); color: var(--blue);
+  border-radius: 3px; text-transform: uppercase; letter-spacing: 0.4px;
+  font-weight: 700; margin-left: 5px; vertical-align: middle;
+}
+
+.card-note {
+  margin: 0 12px 8px; padding: 6px 10px;
+  background: rgba(255,112,67,.1); border-left: 3px solid var(--orange);
+  border-radius: 4px; font-size: 0.78rem; color: var(--orange);
+}
+
+.card-ft {
+  padding: 8px 12px; background: var(--surface2);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.progress { font-size: 0.7rem; color: var(--muted); }
+.badge {
+  font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 12px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.badge.new         { background: rgba(0,200,150,.15); color: var(--green); }
+.badge.in_progress { background: rgba(255,193,7,.15);  color: var(--yellow); }
+.badge.almost_ready{ background: rgba(255,193,7,.15);  color: var(--yellow); }
+.badge.ready       { background: rgba(156,110,255,.2); color: var(--purple); }
+
+.btn-bump {
+  padding: 7px 16px; background: var(--green); color: #000;
+  border: none; border-radius: 6px; font-weight: 900; font-size: 0.82rem;
+  cursor: pointer; transition: all 0.12s;
+}
+.btn-bump:hover { background: #00e0a8; transform: translateY(-1px); }
+.btn-almost {
+  padding: 7px 12px; background: rgba(255,193,7,.15); color: var(--yellow);
+  border: 1px solid rgba(255,193,7,.4); border-radius: 6px;
+  font-weight: 800; font-size: 0.78rem; cursor: pointer; transition: all 0.12s;
+}
+.btn-almost:hover { background: rgba(255,193,7,.3); }
+.btn-waiting {
+  padding: 6px 12px; background: rgba(156,110,255,.12); color: var(--purple);
+  border: 1px solid rgba(156,110,255,.4); border-radius: 6px;
+  font-weight: 700; font-size: 0.75rem; cursor: default;
+}
+.btn-skip {
+  padding: 6px 9px; background: transparent; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem;
+  cursor: pointer; transition: all 0.12s; margin-left: 5px;
+}
+.btn-skip:hover { border-color: var(--red); color: var(--red); }
+
+/* Animations */
+@keyframes flash-new {
+  0%   { box-shadow: 0 0 0 0 rgba(0,200,150,.9); }
+  100% { box-shadow: 0 0 0 18px rgba(0,200,150,0); }
+}
+.new-flash { animation: flash-new 0.7s ease-out !important; }
+@keyframes fadeout { to { opacity: 0; transform: scale(0.9); } }
+.removing { animation: fadeout 0.28s ease-in forwards; }
+
+/* Toasts */
+.toast-wrap {
+  position: fixed; top: 120px; right: 14px; z-index: 500;
+  display: flex; flex-direction: column; gap: 7px; pointer-events: none;
+}
+.toast {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-left: 3px solid var(--green); padding: 9px 15px;
+  border-radius: 8px; font-size: 0.82rem; max-width: 270px;
+  animation: slide-in 0.2s ease-out;
+}
+@keyframes slide-in { from { transform: translateX(110%); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes slide-out{ to   { transform: translateX(110%); opacity:0; } }
+.toast.out { animation: slide-out 0.2s ease-in forwards; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Demo Banner -->
+<div class="demo-banner">
+  <div>
+    <div class="demo-title">🖥 KITCHEN DISPLAY SYSTEM — OFFLINE DEMO</div>
+    <div class="demo-desc">No server needed · All data is simulated · Fully interactive</div>
+  </div>
+  <div class="demo-actions">
+    <button class="btn-demo btn-new-order" onclick="addRandomOrder()">+ Simulate New Order</button>
+    <button class="btn-demo btn-reset" onclick="resetDemo()">↺ Reset Demo</button>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div style="display:flex;align-items:center;gap:18px">
+    <div class="logo">🍳 KÜCHE</div>
+    <div class="conn-badge">
+      <div class="conn-dot"></div>
+      <span>Demo Mode</span>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-val" id="s-active">0</div><div class="stat-lbl">Active</div></div>
+    <div class="stat"><div class="stat-val" id="s-ready">0</div><div class="stat-lbl">Ready</div></div>
+    <div class="stat"><div class="stat-val" id="s-avg">—</div><div class="stat-lbl">Avg Wait</div></div>
+  </div>
+  <div class="clock" id="clock"></div>
+</header>
+
+<div class="filters" id="filters"></div>
+<main class="grid" id="grid"></main>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ── Mock Data ────────────────────────────────────────────────
+const now = Date.now();
+const minsAgo = m => new Date(now - m * 60000).toISOString();
+
+let nextId = 100;
+let station = 'all';
+let audioCtx = null;
+
+const INITIAL_ORDERS = [
+  {
+    id: 1, order_number: '42', table_number: '3', server_name: 'Anna',
+    notes: null, status: 'new', created_at: minsAgo(2), updated_at: minsAgo(2),
+    items: [
+      { id: 11, name: 'Classic Burger',  quantity: 2, modifiers: ['medium'], notes: null, station: 'grill', status: 'pending' },
+      { id: 12, name: 'Pommes frites',   quantity: 2, modifiers: [], notes: null, station: 'küche', status: 'pending' },
+      { id: 13, name: 'Cola',            quantity: 2, modifiers: [], notes: null, station: 'bar',   status: 'pending' },
+    ]
+  },
+  {
+    id: 2, order_number: '43', table_number: '8', server_name: 'Markus',
+    notes: 'Please hurry — guest has a meeting at 1pm!', status: 'in_progress', created_at: minsAgo(8), updated_at: minsAgo(7),
+    items: [
+      { id: 21, name: 'Ribeye Steak 300g', quantity: 1, modifiers: ['medium-rare'], notes: 'No salt', station: 'grill', status: 'done' },
+      { id: 22, name: 'Caesar Salad',      quantity: 1, modifiers: ['no croutons'], notes: null,      station: 'cold',  status: 'pending' },
+      { id: 23, name: 'Sparkling Water',   quantity: 2, modifiers: [], notes: null, station: 'bar', status: 'pending' },
+    ]
+  },
+  {
+    id: 3, order_number: '44', table_number: '12', server_name: 'Lisa',
+    notes: '⚠ Guest with PEANUT ALLERGY at table!', status: 'new', created_at: minsAgo(13), updated_at: minsAgo(13),
+    items: [
+      { id: 31, name: 'Wiener Schnitzel',    quantity: 2, modifiers: ['no lemon'], notes: null, station: 'grill',   status: 'pending' },
+      { id: 32, name: 'Soup of the Day',     quantity: 2, modifiers: [], notes: null,            station: 'küche',  status: 'pending' },
+      { id: 33, name: 'Mixed Salad',         quantity: 1, modifiers: [], notes: null,            station: 'cold',   status: 'pending' },
+      { id: 34, name: 'White Wine 0.2l',     quantity: 2, modifiers: [], notes: null,            station: 'bar',    status: 'pending' },
+      { id: 35, name: 'Tiramisu',            quantity: 2, modifiers: [], notes: null,            station: 'dessert',status: 'pending' },
+    ]
+  },
+  {
+    id: 4, order_number: '45', table_number: '5', server_name: 'Stefan',
+    notes: null, status: 'in_progress', created_at: minsAgo(19), updated_at: minsAgo(18),
+    items: [
+      { id: 41, name: 'Pizza Margherita',    quantity: 1, modifiers: ['extra cheese'], notes: null, station: 'küche', status: 'done' },
+      { id: 42, name: 'Spaghetti Bolognese', quantity: 1, modifiers: [], notes: null,               station: 'küche', status: 'done' },
+      { id: 43, name: 'Kids Nuggets',        quantity: 1, modifiers: ['no dip'], notes: null,       station: 'küche', status: 'pending' },
+      { id: 44, name: 'Apple Juice',         quantity: 1, modifiers: [], notes: null,               station: 'bar',   status: 'pending' },
+    ]
+  },
+  {
+    id: 5, order_number: '41', table_number: '7', server_name: 'Julia',
+    notes: null, status: 'almost_ready', created_at: minsAgo(5), updated_at: minsAgo(1),
+    cutlery_confirmed: false,
+    items: [
+      { id: 51, name: 'Grilled Salmon',  quantity: 2, modifiers: ['lemon on side'], notes: null, station: 'grill', status: 'done' },
+      { id: 52, name: 'Roast Potatoes',  quantity: 2, modifiers: [], notes: null,                station: 'küche', status: 'done' },
+      { id: 53, name: 'Prosecco 0.1l',   quantity: 2, modifiers: [], notes: null,                station: 'bar',   status: 'done' },
+    ]
+  }
+];
+
+let orders = {};
+
+function initOrders() {
+  orders = {};
+  INITIAL_ORDERS.forEach(o => {
+    orders[o.id] = JSON.parse(JSON.stringify(o));
+  });
+}
+initOrders();
+
+// ── Helpers ──────────────────────────────────────────────────
+const esc = s => s == null ? '' : String(s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function elapsed(createdAt) {
+  return Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+}
+function fmt(sec) {
+  return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;
+}
+function urgency(sec, status) {
+  if (status === 'ready' || status === 'almost_ready') return -1;
+  if (sec < 5  * 60) return 0;
+  if (sec < 10 * 60) return 1;
+  if (sec < 15 * 60) return 2;
+  return 3;
+}
+
+// ── Build card ───────────────────────────────────────────────
+function buildCard(o) {
+  const sec  = elapsed(o.created_at);
+  const urg  = urgency(sec, o.status);
+  const done = o.items.filter(i => i.status === 'done').length;
+  const lbl  = { new:'New', in_progress:'In Progress', almost_ready:'Almost Ready', ready:'Ready' };
+
+  const itemsHtml = o.items.map(item => `
+    <div class="item${item.status==='done'?' done':''}"
+         onclick="toggleItem(${o.id},${item.id})" data-iid="${item.id}">
+      <div class="check"></div>
+      <span class="item-qty">${item.quantity}&times;</span>
+      <div class="item-body">
+        <span class="item-name">${esc(item.name)}${
+          item.station && item.station !== 'küche'
+            ? `<span class="station-tag">${esc(item.station)}</span>` : ''
+        }</span>
+        ${item.modifiers?.length
+          ? `<div class="mods">${item.modifiers.map(m=>`<span class="mod">${esc(m)}</span>`).join('')}</div>` : ''}
+        ${item.notes ? `<div class="item-note">📝 ${esc(item.notes)}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  const footer = o.status === 'ready'
+    ? `<div style="display:flex;align-items:center">
+         <button class="btn-waiting">⏳ Waiting for waiter</button>
+         <button class="btn-skip" onclick="skipBump(${o.id})" title="Complete directly">✕</button>
+       </div>`
+    : o.status === 'almost_ready'
+    ? `<div style="display:flex;align-items:center;gap:10px">
+         <span style="font-size:0.75rem;font-weight:700;color:${o.cutlery_confirmed ? 'var(--green)' : 'var(--yellow)'}">
+           🍴 ${o.cutlery_confirmed ? 'Cutlery ✓' : 'Cutlery pending'}
+         </span>
+         <button class="btn-bump" onclick="bump(${o.id})">DONE ✓</button>
+       </div>`
+    : `<div style="display:flex;gap:7px">
+         <button class="btn-almost" onclick="almostReady(${o.id})">🍴 ALMOST READY</button>
+         <button class="btn-bump" onclick="bump(${o.id})">DONE ✓</button>
+       </div>`;
+
+  return `
+    <div class="card" id="c${o.id}" data-id="${o.id}"
+         data-status="${o.status}" data-urgency="${urg}" data-created="${o.created_at}">
+      <div class="card-hd">
+        <div>
+          <div class="order-num">#${esc(o.order_number)}</div>
+          ${o.table_number ? `<div class="table-num">Table ${esc(o.table_number)}</div>` : ''}
+        </div>
+        <div class="card-time">
+          <span class="timer">${fmt(sec)}</span>
+          ${o.server_name ? `<span class="srv-name">${esc(o.server_name)}</span>` : ''}
+        </div>
+      </div>
+      <div class="card-items">${itemsHtml}</div>
+      ${o.notes ? `<div class="card-note">⚠ ${esc(o.notes)}</div>` : ''}
+      <div class="card-ft">
+        <div>
+          <span class="badge ${o.status}">${lbl[o.status]||o.status}</span>
+          <span class="progress">&nbsp;${done}/${o.items.length} ✓</span>
+        </div>
+        ${footer}
+      </div>
+    </div>`;
+}
+
+// ── Render ───────────────────────────────────────────────────
+function filtered() {
+  return Object.values(orders)
+    .filter(o => station === 'all' || o.items.some(i => i.station === station))
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+}
+
+function renderAll() {
+  const list = filtered();
+  const grid = document.getElementById('grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🎉</div><div class="empty-txt">No active orders — kitchen is clear!</div></div>`;
+  } else {
+    grid.innerHTML = list.map(buildCard).join('');
+  }
+  rebuildFilters();
+  updateStats();
+}
+
+function refreshCard(o) {
+  const el = document.getElementById(`c${o.id}`);
+  if (!el) { renderAll(); return; }
+  const tmp = document.createElement('div');
+  tmp.innerHTML = buildCard(o);
+  el.replaceWith(tmp.firstElementChild);
+}
+
+function removeCard(id) {
+  const el = document.getElementById(`c${id}`);
+  if (!el) return;
+  el.classList.add('removing');
+  setTimeout(() => { el.remove(); if (!document.getElementById('grid').querySelector('.card')) renderAll(); }, 300);
+}
+
+function flash(id) {
+  const el = document.getElementById(`c${id}`);
+  if (!el) return;
+  el.classList.add('new-flash');
+  setTimeout(() => el.classList.remove('new-flash'), 750);
+}
+
+// ── Live timers ──────────────────────────────────────────────
+setInterval(() => {
+  document.querySelectorAll('.card').forEach(card => {
+    const id  = +card.dataset.id;
+    const o   = orders[id];
+    if (!o) return;
+    const sec = elapsed(card.dataset.created);
+    const t   = card.querySelector('.timer');
+    if (t) t.textContent = fmt(sec);
+    card.dataset.urgency = urgency(sec, o.status);
+  });
+  updateStats();
+}, 1000);
+
+function updateStats() {
+  const list   = Object.values(orders);
+  const readyN = list.filter(o => o.status === 'ready').length;
+  let avgTxt   = '—';
+  const av     = document.getElementById('s-avg');
+  if (list.length) {
+    const avg = list.reduce((s, o) => s + elapsed(o.created_at), 0) / list.length;
+    const m   = Math.floor(avg / 60);
+    avgTxt    = m + ' min';
+    av.className = 'stat-val' + (m >= 15 ? ' alert' : m >= 10 ? ' warn' : '');
+  }
+  document.getElementById('s-active').textContent = list.length;
+  document.getElementById('s-ready').textContent  = readyN;
+  av.textContent = avgTxt;
+}
+
+// ── Clock ────────────────────────────────────────────────────
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(), n.getMinutes(), n.getSeconds()].map(v => String(v).padStart(2,'0')).join(':');
+}
+setInterval(tick, 1000); tick();
+
+// ── Interactions ─────────────────────────────────────────────
+function toggleItem(orderId, itemId) {
+  const o    = orders[orderId]; if (!o) return;
+  const item = o.items.find(i => i.id === itemId); if (!item) return;
+  item.status = item.status === 'done' ? 'pending' : 'done';
+  const allDone = o.items.every(i => i.status === 'done');
+  const anyDone = o.items.some(i  => i.status === 'done');
+  o.status = allDone ? 'ready' : anyDone ? 'in_progress' : 'new';
+  o.updated_at = new Date().toISOString();
+  refreshCard(o);
+  updateStats();
+  if (allDone) { beep(); toast(`Order #${o.order_number} is READY — Table ${o.table_number||'—'}`); }
+}
+
+function bump(orderId) {
+  const o = orders[orderId]; if (!o) return;
+  o.items.forEach(i => i.status = 'done');
+  o.status = 'ready'; o.updated_at = new Date().toISOString();
+  refreshCard(o); updateStats();
+  beep(); toast(`Order #${o.order_number} bumped — Table ${o.table_number||'—'} ready for pickup!`);
+}
+
+function almostReady(orderId) {
+  const o = orders[orderId]; if (!o) return;
+  o.status = 'almost_ready'; o.updated_at = new Date().toISOString();
+  refreshCard(o); updateStats();
+  toast(`🍴 Table ${o.table_number||'—'} — Set cutlery!`);
+}
+
+function skipBump(orderId) {
+  delete orders[orderId];
+  removeCard(orderId);
+  updateStats();
+  toast('Order completed and removed.');
+}
+
+// ── Filters ──────────────────────────────────────────────────
+const stationLabels = { all:'All', küche:'Kitchen', grill:'Grill', cold:'Cold', bar:'Bar', dessert:'Dessert' };
+
+function rebuildFilters() {
+  const set = new Set(['all']);
+  Object.values(orders).forEach(o => o.items.forEach(i => i.station && set.add(i.station)));
+  document.getElementById('filters').innerHTML = [...set].map(s =>
+    `<button class="fbtn${s===station?' active':''}" onclick="setStation('${s}')">${stationLabels[s]||s}</button>`
+  ).join('');
+}
+
+function setStation(s) { station = s; renderAll(); }
+
+// ── Toast ────────────────────────────────────────────────────
+function toast(msg) {
+  const box = document.getElementById('toasts');
+  const el  = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, 3500);
+}
+
+// ── Sound ────────────────────────────────────────────────────
+function beep() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    [523.25, 659.25, 783.99].forEach((f, i) => {
+      const osc = audioCtx.createOscillator();
+      const g   = audioCtx.createGain();
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.type = 'sine'; osc.frequency.value = f;
+      const t = audioCtx.currentTime + i * 0.15;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.3, t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.44);
+      osc.start(t); osc.stop(t + 0.5);
+    });
+  } catch(_) {}
+}
+document.addEventListener('click', () => {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}, { once: true });
+
+// ── Demo: Add Random Order ────────────────────────────────────
+const sampleOrders = [
+  { table:'2', server:'Mia',    note:null, items:[
+    { name:'Margherita Pizza', qty:1, mods:['extra cheese'], station:'küche' },
+    { name:'Tiramisu',         qty:2, mods:[],               station:'dessert' },
+    { name:'Espresso',         qty:2, mods:['double shot'],  station:'bar' },
+  ]},
+  { table:'6', server:'Tom',    note:'Window seat — no rush', items:[
+    { name:'Fish & Chips',    qty:2, mods:[],             station:'küche' },
+    { name:'Tartar Sauce',    qty:2, mods:[],             station:'cold' },
+    { name:'Lager 0.5l',      qty:2, mods:['cold glass'], station:'bar' },
+  ]},
+  { table:'11', server:'Sara',  note:null, items:[
+    { name:'Beef Tenderloin', qty:1, mods:['well done'],  station:'grill' },
+    { name:'Grilled Veggies', qty:1, mods:[],             station:'grill' },
+    { name:'Mashed Potato',   qty:1, mods:['extra gravy'],station:'küche' },
+    { name:'Red Wine 0.2l',   qty:1, mods:[],             station:'bar' },
+  ]},
+  { table:'9', server:'Kevin',  note:'⚠ Lactose intolerant!', items:[
+    { name:'Vegan Burger',    qty:2, mods:['no mayo'],    station:'grill' },
+    { name:'Sweet Potato Fries',qty:2,mods:[],            station:'küche' },
+    { name:'Oat Milk Latte',  qty:2, mods:[],             station:'bar' },
+  ]},
+  { table:'4', server:'Nina',   note:null, items:[
+    { name:'Caesar Salad',    qty:1, mods:['no anchovies'],station:'cold' },
+    { name:'Chicken Wrap',    qty:1, mods:['extra sauce'], station:'küche' },
+    { name:'Smoothie',        qty:1, mods:['no ice'],      station:'bar' },
+  ]},
+];
+
+let sampleIdx = 0;
+let orderCounter = 46;
+
+function addRandomOrder() {
+  const src  = sampleOrders[sampleIdx % sampleOrders.length];
+  sampleIdx++;
+  const id   = ++nextId;
+  const num  = String(++orderCounter);
+  let itemId = id * 100;
+
+  const order = {
+    id, order_number: num,
+    table_number: src.table,
+    server_name: src.server,
+    notes: src.note,
+    status: 'new',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    items: src.items.map(i => ({
+      id: ++itemId,
+      name: i.name, quantity: i.qty,
+      modifiers: i.mods, notes: null,
+      station: i.station, status: 'pending'
+    }))
+  };
+
+  orders[id] = order;
+  renderAll();
+  setTimeout(() => flash(id), 40);
+  beep();
+  toast(`New Order #${num} — Table ${src.table}`);
+}
+
+function resetDemo() {
+  initOrders();
+  station = 'all';
+  sampleIdx = 0;
+  orderCounter = 46;
+  nextId = 100;
+  renderAll();
+  toast('Demo reset to initial state.');
+}
+
+// ── Boot ─────────────────────────────────────────────────────
+renderAll();
+toast('Welcome! Tap items to mark done, use buttons to update status.');
+</script>
+</body>
+</html>
